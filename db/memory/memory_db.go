@@ -58,3 +58,13 @@ func (this *Db) UpdateTodo(id string, input *db.TodoUpdateInput) (*entities.Todo
 	this.todos[id] = updatedTodo
 	return updatedTodo, nil
 }
+
+func (this *Db) ListTodos() ([]*entities.Todo, error) {
+	ret := make([]*entities.Todo, len(this.todos))
+	i := 0
+	for _, value := range this.todos {
+		ret[i] = value
+		i++
+	}
+	return ret, nil
+}

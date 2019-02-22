@@ -8,6 +8,7 @@ type (
 		DeleteTodo(id string) error
 		UpdateTodo(id string, input *TodoUpdateInput) (*entities.Todo, error)
 		GetTodoById(id string) (*entities.Todo, error)
+		ListTodos() ([]*entities.Todo, error)
 	}
 
 	TodoUpdateInput struct {

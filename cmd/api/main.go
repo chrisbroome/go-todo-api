@@ -18,6 +18,7 @@ func todoRoutes(r chi.Router, db db.Db) chi.Router {
 	jsonMarshaller := &marshal.JSONMarshaller{}
 	requestParser := &todos.UnmarshallingRequestParser{Unmarshaller: jsonMarshaller}
 	r.Method("POST", "/", todos.NewBasicApiHandler(todos.NewCreateHandler(db, requestParser)))
+	r.Method("GET", "/", todos.NewBasicApiHandler(todos.NewFindHandler(db)))
 	r.Method("GET", "/{id}", todos.NewBasicApiHandler(todos.NewGetHandler(db)))
 	return r
 }
