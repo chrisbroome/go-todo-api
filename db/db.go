@@ -5,7 +5,7 @@ import "github.com/chrisbroome/go-todo-api/entities"
 type (
 	Db interface {
 		CreateTodo(label string) (*entities.Todo, error)
-		DeleteTodo(id string) error
+		DeleteTodo(id string) (bool, error)
 		UpdateTodo(id string, input *TodoUpdateInput) (*entities.Todo, error)
 		GetTodoById(id string) (*entities.Todo, error)
 		ListTodos() ([]*entities.Todo, error)

@@ -20,6 +20,7 @@ func todoRoutes(r chi.Router, db db.Db) chi.Router {
 	r.Method("POST", "/", todos.NewBasicApiHandler(todos.NewCreateHandler(db, requestParser)))
 	r.Method("GET", "/", todos.NewBasicApiHandler(todos.NewFindHandler(db)))
 	r.Method("GET", "/{id}", todos.NewBasicApiHandler(todos.NewGetHandler(db)))
+	r.Method("DELETE", "/{id}", todos.NewBasicApiHandler(todos.NewRemoveHandler(db)))
 	return r
 }
 

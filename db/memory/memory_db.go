@@ -19,7 +19,7 @@ func NewDb() *Db {
 }
 
 func (this *Db) nextId() string {
-	buf := make([]byte, 20)
+	buf := make([]byte, 12)
 	rand.Read(buf)
 	return hex.EncodeToString(buf)
 }
@@ -34,9 +34,10 @@ func (this *Db) CreateTodo(label string) (*entities.Todo, error) {
 	return todo, nil
 }
 
-func (this *Db) DeleteTodo(id string) error {
+func (this *Db) DeleteTodo(id string) (bool, error) {
+	_, found := this.todos[id]
 	delete(this.todos, id)
-	return nil
+	return found, nil
 }
 
 func (this *Db) GetTodoById(id string) (*entities.Todo, error) {

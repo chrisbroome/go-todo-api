@@ -27,6 +27,13 @@ func (this *BasicApiHandler) WithMarshaller(marshaller marshal.HttpMarshaller) *
 
 func (this *BasicApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	res := this.handler.Handle(r)
+
+	if res.statusCode == http.StatusNoContent {
+		w.WriteHeader(http.StatusNoContent)
+		_, _ = w.Write([]byte(""))
+		return
+	}
+
 	w.Header().Set("content-type", this.marshaller.ContentType())
 	if res.err != nil {
 		w.WriteHeader(res.statusCode)
@@ -34,8 +41,7 @@ func (this *BasicApiHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-
-	if reflect.ValueOf(res.body).IsNil() {
+	if res.statusCode == http.StatusNotFound || reflect.ValueOf(res.body).IsNil() {
 		status := http.StatusNotFound
 		w.WriteHeader(status)
 		notFoundRes := NewErrorResponse(errors.New("not found")).WithStatusCode(status)
