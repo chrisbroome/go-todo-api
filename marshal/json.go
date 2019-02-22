@@ -9,15 +9,19 @@ import (
 type JSONMarshaller struct {
 }
 
+func (*JSONMarshaller) ContentType() string {
+	return "application/json"
+}
+
 func (*JSONMarshaller) Unmarshal(reader io.Reader, result interface{}) error {
-	return UnmarshalJSON(reader, result)
+	return unmarshalJSON(reader, result)
 }
 
 func (*JSONMarshaller) Marshal(writer io.Writer, result interface{}) error {
 	return marshalJSON(writer, result)
 }
 
-func UnmarshalJSON(reader io.Reader, result interface{}) error {
+func unmarshalJSON(reader io.Reader, result interface{}) error {
 	bytes, err := ioutil.ReadAll(reader)
 	if err != nil {
 		return err
