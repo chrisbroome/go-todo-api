@@ -23,12 +23,12 @@ func (this *CreateHandler) Handle(r *http.Request) *ApiResponse {
 	req := createTodoRequest{}
 	err := this.parser.ParseRequest(r, &req)
 	if err != nil {
-		return NewErrorResponse(err)
+		return NewErrorApiResponse(err)
 	}
 
 	todo, err := this.db.CreateTodo(req.Label)
 	if err != nil {
-		return NewErrorResponse(err)
+		return NewErrorApiResponse(err)
 	}
 
 	return NewApiResponse(toTodoResponse(todo)).WithStatusCode(http.StatusCreated)

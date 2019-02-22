@@ -20,7 +20,7 @@ func (this *GetHandler) Handle(r *http.Request) *ApiResponse {
 	id := chi.URLParam(r, "id")
 	todo, err := this.db.GetTodoById(id)
 	if err != nil {
-		return NewErrorResponse(err)
+		return NewErrorApiResponse(err)
 	}
 	return NewApiResponse(toTodoResponse(todo))
 }

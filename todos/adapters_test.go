@@ -7,11 +7,11 @@ import (
 )
 
 func TestApiResponseWriterAdapterFixture(t *testing.T) {
-    gunit.Run(new(ApiResponseWriterAdapterFixture), t)
+	gunit.Run(new(ApiResponseWriterAdapterFixture), t)
 }
 
 type ApiResponseWriterAdapterFixture struct {
-    *gunit.Fixture
+	*gunit.Fixture
 }
 
 func (this *ApiResponseWriterAdapterFixture) Setup() {

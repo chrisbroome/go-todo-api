@@ -75,7 +75,7 @@ func (app *HttpApiApplication) Configure() *HttpApiApplication {
 
 func (app *HttpApiApplication) Run() error {
 	chi.Walk(app.router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
-		fmt.Printf("%10v %v\n",  method, route)
+		fmt.Printf("%10v %v\n", method, route)
 		return nil
 	})
 	fmt.Printf("Listening on port %v\n", app.port)
