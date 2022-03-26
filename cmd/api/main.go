@@ -5,13 +5,14 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/go-chi/chi"
-	"github.com/go-chi/chi/middleware"
-
 	"github.com/chrisbroome/go-todo-api/db"
 	"github.com/chrisbroome/go-todo-api/db/memory"
+	"github.com/chrisbroome/go-todo-api/idgenerator/random"
 	"github.com/chrisbroome/go-todo-api/marshal"
 	"github.com/chrisbroome/go-todo-api/todos"
+	"github.com/go-chi/chi"
+	"github.com/go-chi/chi/middleware"
+	"github.com/pkg/errors"
 )
 
 func todoRoutes(r chi.Router, db db.Db) chi.Router {
@@ -34,7 +35,8 @@ type HttpApiApplication struct {
 
 func NewHttpApiApplication(port int) *HttpApiApplication {
 	jsonMarshaller := &marshal.JSONMarshaller{}
-	db := memory.NewDb()
+	idg := random.NewIdGenerator()
+	db := memory.NewDb(idg)
 	return &HttpApiApplication{
 		port:         port,
 		db:           db,
@@ -57,12 +59,12 @@ func (app *HttpApiApplication) Configure() *HttpApiApplication {
 
 	// root route
 	router.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("welcome"))
+		_, _ = w.Write([]byte("welcome"))
 	})
 
 	router.Get("/healthcheck", func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(""))
+		_, _ = w.Write([]byte(""))
 	})
 
 	router.Route("/todos", func(r chi.Router) {
@@ -76,10 +78,13 @@ func (app *HttpApiApplication) Configure() *HttpApiApplication {
 }
 
 func (app *HttpApiApplication) Run() error {
-	chi.Walk(app.router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
+	err := chi.Walk(app.router, func(method string, route string, handler http.Handler, middlewares ...func(http.Handler) http.Handler) error {
 		fmt.Printf("%10v %v\n", method, route)
 		return nil
 	})
+	if err != nil {
+		return errors.Wrap(err, "unable to walk routes")
+	}
 	fmt.Printf("Listening on port %v\n", app.port)
 	return http.ListenAndServe(fmt.Sprintf(":%v", app.port), app.router)
 }

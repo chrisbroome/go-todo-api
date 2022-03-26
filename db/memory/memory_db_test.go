@@ -1,102 +1,124 @@
-package memory
+package memory_test
 
 import (
 	"testing"
 
+	"github.com/chrisbroome/go-todo-api/db/memory"
+	"github.com/chrisbroome/go-todo-api/idgenerator/random"
+	"github.com/smartystreets/assertions"
 	"github.com/smartystreets/assertions/should"
-	"github.com/smartystreets/gunit"
 
 	"github.com/chrisbroome/go-todo-api/db"
 )
 
-func TestMemoryDbFixture(t *testing.T) {
-	gunit.Run(new(MemoryDbFixture), t)
+type memoryDbTest struct {
+	idg *random.IdGenerator
+	db  *memory.Db
+	*assertions.Assertion
 }
 
-type MemoryDbFixture struct {
-	*gunit.Fixture
+func newMemoryDbTest(t *testing.T) *memoryDbTest {
+	idg := random.NewIdGenerator()
+	return &memoryDbTest{
+		idg:       idg,
+		db:        memory.NewDb(idg),
+		Assertion: assertions.New(t),
+	}
 }
 
-func (this *MemoryDbFixture) Setup() {
+func TestNewDb(t *testing.T) {
+	test := newMemoryDbTest(t)
+	todos, err := test.db.ListTodos()
+	test.So(err, should.BeNil)
+	test.So(todos, should.BeEmpty)
 }
 
-func (this *MemoryDbFixture) TestNewDb() {
-	db := NewDb()
-
-	this.So(db.todos, should.BeEmpty)
-}
-
-func (this *MemoryDbFixture) TestCreateTodo() {
-	memoryDb := NewDb()
+func TestCreateTodo(t *testing.T) {
+	test := newMemoryDbTest(t)
 
 	const label = "a"
-	todo, err := memoryDb.CreateTodo(label)
+	todo, err := test.db.CreateTodo(label)
+	test.So(todo, should.NotBeNil)
+	test.So(err, should.BeNil)
+	test.So(todo.Label, should.Equal, label)
 
-	this.So(memoryDb.todos, should.HaveLength, 1)
-	this.So(todo, should.NotBeNil)
-	this.So(err, should.BeNil)
-	this.So(todo.Label, should.Equal, label)
+	todos, err := test.db.ListTodos()
+	test.So(err, should.BeNil)
+	test.So(todos, should.HaveLength, 1)
 }
 
-func (this *MemoryDbFixture) TestGetTodo() {
-	memoryDb := NewDb()
-	createdTodo, _ := memoryDb.CreateTodo("Pick up stuff")
-	todo, err := memoryDb.GetTodoById(createdTodo.Id)
+func TestGetTodo(t *testing.T) {
+	test := newMemoryDbTest(t)
+	createdTodo, _ := test.db.CreateTodo("Pick up stuff")
+	todo, err := test.db.GetTodoById(createdTodo.Id)
 
-	this.So(err, should.BeNil)
-	this.So(createdTodo, should.Resemble, todo)
+	test.So(err, should.BeNil)
+	test.So(createdTodo, should.Resemble, todo)
 }
 
-func (this *MemoryDbFixture) TestDeleteWhenItemExistsFoundShouldReturnTrue() {
-	memoryDb := NewDb()
-	createdTodo, _ := memoryDb.CreateTodo("This will be deleted")
-	lengthBefore := len(memoryDb.todos)
-	found, err := memoryDb.DeleteTodo(createdTodo.Id)
-	lengthAfter := len(memoryDb.todos)
-	this.So(found, should.BeTrue)
-	if this.So(err, should.BeNil) {
-		this.So(lengthAfter, should.Equal, lengthBefore-1)
+func TestDeleteWhenItemExistsFoundShouldReturnTrue(t *testing.T) {
+	test := newMemoryDbTest(t)
+	createdTodo, err := test.db.CreateTodo("This will be deleted")
+	test.So(err, should.BeNil)
+	test.So(createdTodo, should.NotBeNil)
+
+	todos, err := test.db.ListTodos()
+	test.So(err, should.BeNil)
+	test.So(todos, should.NotBeEmpty)
+	lengthBefore := len(todos)
+
+	found, err := test.db.DeleteTodo(createdTodo.Id)
+	if test.So(err, should.BeNil) {
+		test.So(found, should.BeTrue)
+
+		todos, err = test.db.ListTodos()
+		test.So(err, should.BeNil)
+		test.So(todos, should.BeEmpty)
+		lengthAfter := len(todos)
+		test.So(lengthAfter, should.Equal, lengthBefore-1)
 	}
 }
 
-func (this *MemoryDbFixture) TestDeleteWhenItemDoesNotExistFoundShouldReturnFalse() {
-	memoryDb := NewDb()
-	lengthBefore := len(memoryDb.todos)
-	found, err := memoryDb.DeleteTodo("")
-	lengthAfter := len(memoryDb.todos)
-	this.So(found, should.BeFalse)
-	this.So(err, should.BeNil)
-	this.So(lengthAfter, should.Equal, lengthBefore)
+func TestDeleteWhenItemDoesNotExistFoundShouldReturnFalse(t *testing.T) {
+	test := newMemoryDbTest(t)
+	todos, _ := test.db.ListTodos()
+	lengthBefore := len(todos)
+	found, err := test.db.DeleteTodo("")
+	todos, _ = test.db.ListTodos()
+	lengthAfter := len(todos)
+	test.So(found, should.BeFalse)
+	test.So(err, should.BeNil)
+	test.So(lengthAfter, should.Equal, lengthBefore)
 }
 
-func (this *MemoryDbFixture) TestUpdateTodoWhenTodoExists() {
-	memoryDb := NewDb()
-	createdTodo, _ := memoryDb.CreateTodo("This will be updated")
+func TestUpdateTodoWhenTodoExists(t *testing.T) {
+	test := newMemoryDbTest(t)
+	createdTodo, _ := test.db.CreateTodo("This will be updated")
 	updatesToMake := &db.TodoUpdateInput{
 		Label:     "Updated Label",
 		Completed: true,
 	}
-	updatedTodo, err := memoryDb.UpdateTodo(createdTodo.Id, updatesToMake)
-	if this.So(err, should.BeNil) {
-		this.So(updatedTodo.Label, should.Equal, updatesToMake.Label)
-		this.So(updatedTodo.Completed, should.Equal, updatesToMake.Completed)
+	updatedTodo, err := test.db.UpdateTodo(createdTodo.Id, updatesToMake)
+	if test.So(err, should.BeNil) {
+		test.So(updatedTodo.Label, should.Equal, updatesToMake.Label)
+		test.So(updatedTodo.Completed, should.Equal, updatesToMake.Completed)
 	}
 }
 
-func (this *MemoryDbFixture) TestUpdateTodoWhenTodoDoesNotExist() {
-	memoryDb := NewDb()
+func TestUpdateTodoWhenTodoDoesNotExist(t *testing.T) {
+	test := newMemoryDbTest(t)
 	updatesToMake := &db.TodoUpdateInput{
 		Label:     "Updated Label",
 		Completed: true,
 	}
-	updatedTodo, err := memoryDb.UpdateTodo("id that doesn't exist", updatesToMake)
-	this.So(err, should.BeNil)
-	this.So(updatedTodo, should.BeNil)
+	updatedTodo, err := test.db.UpdateTodo("id that doesn't exist", updatesToMake)
+	test.So(err, should.BeNil)
+	test.So(updatedTodo, should.BeNil)
 }
 
-func (this *MemoryDbFixture) TestNextIdDifferentFromPreviousId() {
-	memoryDb := NewDb()
-	id1 := memoryDb.nextId()
-	id2 := memoryDb.nextId()
-	this.So(id1, should.NotEqual, id2)
-}
+// func TestNextIdDifferentFromPreviousId(t *testing.T) {
+// 	test := newMemoryDbTest(t)
+// 	id1 := test.db.nextId()
+// 	id2 := test.db.nextId()
+// 	test.So(id1, should.NotEqual, id2)
+// }

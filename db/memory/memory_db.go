@@ -1,52 +1,49 @@
 package memory
 
 import (
-	"crypto/rand"
-	"encoding/hex"
-
 	"github.com/chrisbroome/go-todo-api/db"
 	"github.com/chrisbroome/go-todo-api/entities"
 )
 
 type Db struct {
+	idg   entities.IdGenerator
 	todos map[string]*entities.Todo
 }
 
-func NewDb() *Db {
+func NewDb(idg entities.IdGenerator) *Db {
 	return &Db{
+		idg:   idg,
 		todos: make(map[string]*entities.Todo),
 	}
 }
 
-func (this *Db) nextId() string {
-	buf := make([]byte, 12)
-	rand.Read(buf)
-	return hex.EncodeToString(buf)
+func (db *Db) nextId() string {
+	return db.idg.GenerateID()
 }
 
-func (this *Db) CreateTodo(label string) (*entities.Todo, error) {
-	id := this.nextId()
+func (db *Db) CreateTodo(label string) (*entities.Todo, error) {
+	id := db.nextId()
 	todo := &entities.Todo{
 		Id:    id,
 		Label: label,
 	}
-	this.todos[id] = todo
+	db.todos[id] = todo
 	return todo, nil
 }
 
-func (this *Db) DeleteTodo(id string) (bool, error) {
-	_, found := this.todos[id]
-	delete(this.todos, id)
+func (db *Db) DeleteTodo(id string) (bool, error) {
+	_, found := db.todos[id]
+	delete(db.todos, id)
 	return found, nil
 }
 
-func (this *Db) GetTodoById(id string) (*entities.Todo, error) {
-	todo := this.todos[id]
+func (db *Db) GetTodoById(id string) (*entities.Todo, error) {
+	todo := db.todos[id]
 	return todo, nil
 }
 
-func (this *Db) UpdateTodo(id string, input *db.TodoUpdateInput) (*entities.Todo, error) {
-	todo, _ := this.GetTodoById(id)
+func (db *Db) UpdateTodo(id string, input *db.TodoUpdateInput) (*entities.Todo, error) {
+	todo, _ := db.GetTodoById(id)
 	if todo == nil {
 		return nil, nil
 	}
@@ -56,14 +53,14 @@ func (this *Db) UpdateTodo(id string, input *db.TodoUpdateInput) (*entities.Todo
 		Label:     input.Label,
 		Completed: input.Completed,
 	}
-	this.todos[id] = updatedTodo
+	db.todos[id] = updatedTodo
 	return updatedTodo, nil
 }
 
-func (this *Db) ListTodos() ([]*entities.Todo, error) {
-	ret := make([]*entities.Todo, len(this.todos))
+func (db *Db) ListTodos() ([]*entities.Todo, error) {
+	ret := make([]*entities.Todo, len(db.todos))
 	i := 0
-	for _, value := range this.todos {
+	for _, value := range db.todos {
 		ret[i] = value
 		i++
 	}
