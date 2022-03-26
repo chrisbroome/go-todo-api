@@ -17,7 +17,7 @@ type RequestParser interface {
 type ErrorResponse struct {
 	StatusCode int    `json:"statusCode"`
 	Error      string `json:"error"`
-	err        error  `json:"error"`
+	err        error
 }
 
 func NewErrorResponse(err error) *ErrorResponse {

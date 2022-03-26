@@ -5,3 +5,7 @@ type Todo struct {
 	Label     string
 	Completed bool
 }
+
+func NewTodo(label string) *Todo {
+	return &Todo{Label: label}
+}

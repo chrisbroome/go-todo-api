@@ -47,15 +47,26 @@ func (this *MemoryDbFixture) TestGetTodo() {
 	this.So(createdTodo, should.Resemble, todo)
 }
 
-func (this *MemoryDbFixture) TestDeleteTodo() {
+func (this *MemoryDbFixture) TestDeleteWhenItemExistsFoundShouldReturnTrue() {
 	memoryDb := NewDb()
 	createdTodo, _ := memoryDb.CreateTodo("This will be deleted")
 	lengthBefore := len(memoryDb.todos)
-	err := memoryDb.DeleteTodo(createdTodo.Id)
+	found, err := memoryDb.DeleteTodo(createdTodo.Id)
 	lengthAfter := len(memoryDb.todos)
+	this.So(found, should.BeTrue)
 	if this.So(err, should.BeNil) {
 		this.So(lengthAfter, should.Equal, lengthBefore-1)
 	}
+}
+
+func (this *MemoryDbFixture) TestDeleteWhenItemDoesNotExistFoundShouldReturnFalse() {
+	memoryDb := NewDb()
+	lengthBefore := len(memoryDb.todos)
+	found, err := memoryDb.DeleteTodo("")
+	lengthAfter := len(memoryDb.todos)
+	this.So(found, should.BeFalse)
+	this.So(err, should.BeNil)
+	this.So(lengthAfter, should.Equal, lengthBefore)
 }
 
 func (this *MemoryDbFixture) TestUpdateTodoWhenTodoExists() {
